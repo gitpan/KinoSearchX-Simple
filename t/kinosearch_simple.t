@@ -40,7 +40,7 @@ sub main{
         my ( $objects, $pager ) = $searcher->search('title:bacon', 1);
 
         is(scalar(@{$objects}), 1, '"title:bacon" 1 result found');
-        isa_ok($objects->[0], 'KinoSearchX::Simple::Result');
+        isa_ok($objects->[0], 'KinoSearchX::Simple::Result::Object');
         is($objects->[0]->title, 'title filled with bacon', 'title matches');
     }
 
@@ -48,7 +48,7 @@ sub main{
         my ( $objects, $pager ) = $searcher->search('type:blog', 1);
 
         is(scalar(@{$objects}), 1, '"type:blog" 1 result found');
-        isa_ok($objects->[0], 'KinoSearchX::Simple::Result');
+        isa_ok($objects->[0], 'KinoSearchX::Simple::Result::Object');
         is($objects->[0]->title, 'this is a title', 'title matches');
     }
 
@@ -56,7 +56,7 @@ sub main{
         my ( $objects, $pager ) = $searcher->search('type:link', 1);
 
         is(scalar(@{$objects}), 2, '"type:link" 2 result found');
-        isa_ok($objects->[0], 'KinoSearchX::Simple::Result');
+        isa_ok($objects->[0], 'KinoSearchX::Simple::Result::Object');
         is($objects->[0]->title, 'title filled with bacon', 'link 1 title matches');
         is($objects->[1]->title, 'title for link 2', 'link 2 title matches');
     }
@@ -65,7 +65,7 @@ sub main{
         my ( $objects, $pager ) = $searcher->search('type:picture', 1);
 
         is(scalar(@{$objects}), 1, '"type:picture" 1 result found');
-        isa_ok($objects->[0], 'KinoSearchX::Simple::Result');
+        isa_ok($objects->[0], 'KinoSearchX::Simple::Result::Object');
         is($objects->[0]->title, 'pciture <-wrong not a link or a bg', 'title matches');
     }
 
@@ -73,7 +73,7 @@ sub main{
         my ( $object, $pager ) = $searcher->search( 'id:1' );
         ok($object, 'search reults');
         is( scalar(@{$object}), 1, '1 result');
-        isa_ok($object->[0], 'KinoSearchX::Simple::Result');
+        isa_ok($object->[0], 'KinoSearchX::Simple::Result::Object');
 
         my ( $not_indexed ) = $searcher->search( 'id:9999' );
         is( $not_indexed, undef, " object id:9999 doesn't exist");
@@ -82,7 +82,7 @@ sub main{
     {
         my ( $object, $pager ) = $searcher->search( 'id:1' );
         ok($object, '"id:1" 1 result found');
-        isa_ok($object->[0], 'KinoSearchX::Simple::Result');
+        isa_ok($object->[0], 'KinoSearchX::Simple::Result::Object');
 
         $searcher->delete( 'id' => 1);
         $searcher->commit;
@@ -93,7 +93,7 @@ sub main{
     {
         my ( $object, $page ) = $searcher->search( 'id:2' );
         ok($object, 'reults found');
-        isa_ok($object->[0], 'KinoSearchX::Simple::Result');
+        isa_ok($object->[0], 'KinoSearchX::Simple::Result::Object');
         is($object->[0]->title, 'title for link 2', 'title for link2 is as expected');
         my $old_title = $object->[0]->title;
 
@@ -108,7 +108,7 @@ sub main{
 
         ( $object, $page ) = $searcher->search( 'id:2' );
         ok($object, "object id:2 exists");
-        isa_ok($object->[0], 'KinoSearchX::Simple::Result');
+        isa_ok($object->[0], 'KinoSearchX::Simple::Result::Object');
         is($object->[0]->title, "updated ${old_title}", 'object updated');
     }
 
@@ -124,7 +124,7 @@ sub main{
 
         my ( $object, $pager ) = $searcher->search( 'id:99' );
         ok($object, 'object id:99 exists');
-        isa_ok($object->[0], 'KinoSearchX::Simple::Result');
+        isa_ok($object->[0], 'KinoSearchX::Simple::Result::Object');
         is($object->[0]->title, 'update or create test', 'update or create test');
     }
 
@@ -136,6 +136,15 @@ sub main{
         isa_ok($object->[0], 'KinoSearchX::Simple::Result::Test');
         is($object->[0]->{'message'}, 'using custom class', 'message from custom resultclass');
     }
+    
+    {
+        $searcher->resultclass('KinoSearchX::Simple::Result::Hash'); 
+        my ( $object, $pager ) = $searcher->search( 'id:99' );
+        ok($object, 'search reults');
+        is( scalar(@{$object}), 1, '1 result');
+        isa_ok($object->[0], 'HASH');
+    }
+
 }
 
 sub index_test_data{
@@ -174,6 +183,70 @@ sub index_test_data{
     });
 
     $searcher->commit;
+}
+
+{
+    my $tempdir = File::Temp::tempdir( 'CLEANUP' => 1 );
+
+    my $searcher = new_ok('KinoSearchX::Simple' => [{
+        'index_path' => $tempdir,
+        'schema' => [
+            {
+                'name' => 'title', 
+                'boost' => 3,
+            },{
+                'name' => 'description',
+            },{
+                'name' => 'id',
+            },
+        ],
+        'search_fields' => ['title', 'description'],
+        'search_boolop' => 'AND',
+    }]);
+
+    {
+        $searcher->update_or_create({
+            'id' => 1,
+            'title' => 'foobar',
+            'description' => 'wibble',
+        });
+        $searcher->commit;
+
+        my ( $objects, $pager ) = $searcher->search( 'id:1' );
+        is( scalar(@{$objects}), 1, 'only 1 object returned' );
+
+        ok($objects, 'objects returned');
+        isa_ok($objects->[0], 'KinoSearchX::Simple::Result::Object');
+        is($objects->[0]->title, 'foobar', 'initial update or create test');
+    }
+
+    {
+        $searcher->update_or_create({
+            'id' => 1,
+            'title' => 'jibble',
+            'description' => 'mooface',
+        });
+        $searcher->commit;
+
+        my ( $objects, $pager ) = $searcher->search( 'id:1' );
+        is( scalar(@{$objects}), 1, 'only 1 object returned' );
+
+        ok($objects, 'objects returned');
+        isa_ok($objects->[0], 'KinoSearchX::Simple::Result::Object');
+        is($objects->[0]->title, 'jibble', '2nd update or create test');
+    }
+
+    {
+        my ( $objects, $pager ) = $searcher->search( 'foobar' );
+        is( $objects, undef, 'no objects returned' );
+    }
+
+    {
+        my ( $objects, $pager ) = $searcher->search( 'jibble' );
+        is( scalar(@{$objects}), 1, 'only 1 object returned' );
+        ok($objects, 'objects returned');
+        isa_ok($objects->[0], 'KinoSearchX::Simple::Result::Object');
+    }
 }
 
 done_testing();

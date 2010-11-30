@@ -1,11 +1,22 @@
 package KinoSearchX::Simple;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 use 5.008;
 
 use Moose;
 use namespace::autoclean;
+
+use Moose::Util::TypeConstraints;
+
+subtype 'LoadClass' 
+    => as 'ClassName';
+
+coerce 'LoadClass' 
+    => from 'Str'
+    => via { Class::MOP::load_class($_); $_ };
+
+no Moose::Util::TypeConstraints;
 
 use KinoSearch1::InvIndexer;
 use KinoSearch1::Searcher;
@@ -14,15 +25,13 @@ use KinoSearch1::Index::Term;
 use KinoSearch1::QueryParser::QueryParser;
 use KinoSearch1::Search::TermQuery;
 
-use KinoSearchX::Simple::Result;
-
 use Data::Page;
 
 =pod
 
 =head1 NAME
 
-KinoSearchX::Simple - Simple L<KinoSearch1> Interface, inspired by L<Plucene::Simple>
+KinoSearchX::Simple - Simple L<KinoSearch1> Interface, inspired by the now depricated L<Plucene::Simple>
 
 =head1 SYNOPSIS
 
@@ -148,17 +157,18 @@ sub _build__query_parser{
     my $self = shift;
 
     return KinoSearch1::QueryParser::QueryParser->new(
-        analyzer       => $self->_analyser,
-        fields         => $self->search_fields,
-        default_boolop => $self->search_boolop,
+        'analyzer'       => $self->_analyser,
+        'fields'         => $self->search_fields,
+        'default_boolop' => $self->search_boolop,
     );
 }
 
 has resultclass => (
     'is' => 'rw',
-    'isa' => 'ClassName',
+    'isa' => 'LoadClass',
+    'coerce' => 1,
     'lazy' => 1,
-    'default' => 'KinoSearchX::Simple::Result',
+    'default' => 'KinoSearchX::Simple::Result::Object',
 );
 
 has entries_per_page => (
@@ -208,6 +218,10 @@ sub search{
         'description' => 'this is the description',
     });
 
+not that it has to be, but its highly recommended that I<id> is a unique identifier for this document 
+
+or you'll have to pass $pk to update_or_create
+
 =cut
 sub create{
     my ( $self, $document ) = @_;
@@ -232,19 +246,19 @@ sub create{
         'id' => 1,
         'title' => 'this is the updated title',
         'description' => 'this is the description',
-    }, 'id', 1);
+    }, 'id');
 
-$pk defaults to 'id'
-$pv defaults to $document->{'id'} if not provided
+$pk is the unique key to lookup by, defaults to 'id'
 
 =cut
 sub update_or_create{
-    my ( $self, $document, $pk, $pv ) = @_;
+    my ( $self, $document, $pk ) = @_;
 
+    return undef if ( !$document );
     $pk ||= 'id';
-    $pv ||= $document->{'id'};
+    $pv = $document->{ $pk };
 
-    return undef if ( !$document || !$pk );
+    return undef if ( !$pv );
     $self->delete( $pk, $pv );
 
     $self->create( $document );
@@ -322,7 +336,9 @@ can be changed to I<AND>, in which case the above becomes
 
 =head2 resultclass
 
-resultclass for results, defaults to L<KinoSearchX::Simple::Result> which creates acessors for each key => value returned
+resultclass for results, defaults to L<KinoSearchX::Simple::Result::Object> which creates acessors for each key => value returned
+
+could be changed tp KinoSearchX::Simple::Result::Hash for a plain old, hashref or a custom class
 
 =head2 entries_per_page
 
@@ -334,8 +350,6 @@ default is 100
 
 Bugs should always be submitted via the CPAN bug tracker
 
-L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=KinoSearchX-Simple>
-
 For other issues, contact the maintainer
 
 =head1 AUTHORS
@@ -346,14 +360,14 @@ n0body E<lt>n0body@thisaintnews.comE<gt>
 
 L<http://thisaintnews.com>, L<KinoSearch1>, L<Data::Page>, L<Moose>
 
-=head1 COPYRIGHT
+=head1 COPYRIGHT AND LICENSE
 
-Copyright 2010 n0body L<http://thisaintnews.com/> . All rights reserved.
+Copyright (C) 2010 by n0body L<http://thisaintnews.com/>
 
-This program is free software; you can redistribute
-it and/or modify it under the same terms as perl itself.
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself, either Perl version 5.10.1 or,
+at your option, any later version of Perl 5 you may have available.
 
 =cut
-
 
 __PACKAGE__->meta->make_immutable;

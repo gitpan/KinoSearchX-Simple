@@ -1,16 +1,19 @@
-package KinoSearchX::Simple::Result;
+package KinoSearchX::Simple::Result::Object;
+
+our $VERSION = '0.03';
+
 use Moose;
 use namespace::autoclean;
 
 sub BUILD{
-    my ( $self, $config ) = @_;
+    my ( $self, $data ) = @_;
 
-    foreach my $key ( keys(%{$config}) ){
+    foreach my $key ( keys(%{$data}) ){
         has $key => (
             'is' => 'ro',
             'isa' => 'Any',
             'lazy' => 1,
-            'default' => $config->{$key},
+            'default' => $data->{$key},
         );
     }
 }
