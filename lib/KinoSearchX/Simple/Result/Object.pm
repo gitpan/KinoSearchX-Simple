@@ -1,7 +1,5 @@
 package KinoSearchX::Simple::Result::Object;
 
-our $VERSION = '0.04';
-
 use Moose;
 use namespace::autoclean;
 

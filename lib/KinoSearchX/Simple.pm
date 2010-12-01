@@ -1,6 +1,6 @@
 package KinoSearchX::Simple;
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 use 5.008;
 
@@ -31,7 +31,7 @@ use Data::Page;
 
 =head1 NAME
 
-KinoSearchX::Simple - Simple L<KinoSearch1> Interface, inspired by the now depricated L<Plucene::Simple>
+KinoSearchX::Simple - Simple L<KinoSearch1> Interface
 
 =head1 SYNOPSIS
 
@@ -47,6 +47,7 @@ KinoSearchX::Simple - Simple L<KinoSearch1> Interface, inspired by the now depri
                 'name' => 'description',
             },{
                 'name' => 'id',
+                'analysed' => 0, #you don't want the analyser to adjust your id do you?
             },
         ],
         'search_fields' => ['title', 'description'],
@@ -278,8 +279,12 @@ sub delete{
 
     return undef if ( !$key || !$value );
 
+    #delete only works on finished indexes
+    $self->commit;
     my $term = KinoSearch1::Index::Term->new( $key => $value );
     $self->_indexer->delete_docs_by_term($term);
+    $self->commit;
+    #finish index coz we jsut deleted something
 }
 
 =pod

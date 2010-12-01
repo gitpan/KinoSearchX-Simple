@@ -249,6 +249,44 @@ sub index_test_data{
     }
 }
 
+{
+    my $tempdir = File::Temp::tempdir( 'CLEANUP' => 1 );
+
+    my $searcher = new_ok('KinoSearchX::Simple' => [{
+        'index_path' => $tempdir,
+        'schema' => [
+            {
+                'name' => 'title', 
+                'boost' => 3,
+            },{
+                'name' => 'description',
+            },{
+                'name' => 'id',
+            },
+        ],
+        'search_fields' => ['title', 'description'],
+        'search_boolop' => 'AND',
+    }]);
+
+    {
+        for my $i ( 0..100 ){
+            $searcher->update_or_create({
+                'id' => 1,
+                'title' => 'foobar' . $i,
+                'description' => 'wibble' . $i,
+            });
+        }
+        $searcher->commit;
+
+        my ( $objects, $pager ) = $searcher->search( 'id:1' );
+        is( scalar(@{$objects}), 1, 'only 1 object returned' );
+
+        ok($objects, 'objects returned');
+        isa_ok($objects->[0], 'KinoSearchX::Simple::Result::Object');
+        is($objects->[0]->title, 'foobar100', 'update or create test');
+    }
+}
+
 done_testing();
 
 package KinoSearchX::Simple::Result::Test;

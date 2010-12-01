@@ -1,6 +1,5 @@
 NAME
-    KinoSearchX::Simple - Simple KinoSearch1 Interface, inspired by the now
-    depricated Plucene::Simple
+    KinoSearchX::Simple - Simple KinoSearch1 Interface
 
 SYNOPSIS
         use KinoSearchX::Simple;
@@ -15,6 +14,7 @@ SYNOPSIS
                     'name' => 'description',
                 },{
                     'name' => 'id',
+                    'analysed' => 0, #you don't want the analyser to adjust your id do you?
                 },
             ],
             'search_fields' => ['title', 'description'],
