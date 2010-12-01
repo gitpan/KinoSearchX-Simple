@@ -14,6 +14,5 @@ lib/KinoSearchX/Simple/Result/Hash.pm
 lib/KinoSearchX/Simple/Result/Object.pm
 Makefile.PL
 MANIFEST			This list of files
-META.yml
 README
 t/kinosearch_simple.t

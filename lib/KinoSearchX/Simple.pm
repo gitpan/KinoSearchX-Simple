@@ -1,6 +1,6 @@
 package KinoSearchX::Simple;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 use 5.008;
 
@@ -256,7 +256,7 @@ sub update_or_create{
 
     return undef if ( !$document );
     $pk ||= 'id';
-    $pv = $document->{ $pk };
+    my $pv = $document->{ $pk };
 
     return undef if ( !$pv );
     $self->delete( $pk, $pv );
