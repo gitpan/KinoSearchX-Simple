@@ -1,6 +1,6 @@
 package KinoSearchX::Simple;
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 use 5.008;
 
@@ -283,8 +283,6 @@ sub delete{
     $self->commit;
     my $term = KinoSearch1::Index::Term->new( $key => $value );
     $self->_indexer->delete_docs_by_term($term);
-    $self->commit;
-    #finish index coz we jsut deleted something
 }
 
 =pod
