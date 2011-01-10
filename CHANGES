@@ -1,3 +1,6 @@
+0.007
+    changed version number stlye
+    fixed documentation error
 0.06
     speed - removed uneeded 2nd commit in delete()
 0.05

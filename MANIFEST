@@ -1,3 +1,4 @@
+CHANGES
 inc/Module/AutoInstall.pm
 inc/Module/Install.pm
 inc/Module/Install/AutoInstall.pm
@@ -14,6 +15,4 @@ lib/KinoSearchX/Simple/Result/Hash.pm
 lib/KinoSearchX/Simple/Result/Object.pm
 Makefile.PL
 MANIFEST			This list of files
-README
-CHANGES
 t/kinosearch_simple.t

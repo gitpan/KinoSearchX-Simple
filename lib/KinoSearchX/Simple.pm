@@ -1,6 +1,7 @@
 package KinoSearchX::Simple;
 
-our $VERSION = '0.06';
+our $VERSION = '0.007';
+$VERSION = eval $VERSION;
 
 use 5.008;
 
@@ -26,52 +27,6 @@ use KinoSearch1::QueryParser::QueryParser;
 use KinoSearch1::Search::TermQuery;
 
 use Data::Page;
-
-=pod
-
-=head1 NAME
-
-KinoSearchX::Simple - Simple L<KinoSearch1> Interface
-
-=head1 SYNOPSIS
-
-    use KinoSearchX::Simple;
-
-    my $searcher = KinoSearchX::Simple->new(
-        'index_path' => '/tmp/search_index',
-        'schema' => [
-            {
-                'name' => 'title',
-                'boost' => 3,
-            },{
-                'name' => 'description',
-            },{
-                'name' => 'id',
-                'analysed' => 0, #you don't want the analyser to adjust your id do you?
-            },
-        ],
-        'search_fields' => ['title', 'description'],
-        'search_boolop' => 'AND',
-    );
-
-    $searcher->create({
-        'id' => 1,
-        'title' => 'fibble',
-        'description' => 'wibble',
-    });
-
-    #important - always commit after updating the index!
-    $searcher->commit;
-
-    my ( $results, $pager ) = $searcher->search( 'fibble' );
-
-=head1 DESCRIPTION
-
-Simple interface to L<KinoSearch1>. Use if you want to use L<KinoSearch1> and are lazy :p
-
-=head1 FUNCTIONS
-
-=cut
 
 has _language => (
     'is' => 'ro',
@@ -181,13 +136,6 @@ has entries_per_page => (
 
 no Moose;
 
-=pod
-
-=head2 B<search>( $query_string, $page ) - search index
-
-    my ( $results, $pager ) = $searcher->search( $query, $page );
-
-=cut
 sub search{
     my ( $self, $query_string, $page ) = @_;
 
@@ -209,21 +157,6 @@ sub search{
     return undef;
 }
 
-=pod
-
-=head2 B<create>( $document ) - add item to index
-
-    $searcher->create({
-        'id' => 1,
-        'title' => 'this is the title',
-        'description' => 'this is the description',
-    });
-
-not that it has to be, but its highly recommended that I<id> is a unique identifier for this document 
-
-or you'll have to pass $pk to update_or_create
-
-=cut
 sub create{
     my ( $self, $document ) = @_;
 
@@ -239,19 +172,6 @@ sub create{
     $self->_indexer->add_doc($doc);
 }
 
-=pod
-
-=head2 B<update_or_create>( $document, $pk, $pv ) - updates or creates document in the index
-
-    $searcher->update_or_create({
-        'id' => 1,
-        'title' => 'this is the updated title',
-        'description' => 'this is the description',
-    }, 'id');
-
-$pk is the unique key to lookup by, defaults to 'id'
-
-=cut
 sub update_or_create{
     my ( $self, $document, $pk ) = @_;
 
@@ -261,19 +181,11 @@ sub update_or_create{
 
     return undef if ( !$pv );
     $self->delete( $pk, $pv );
+    $self->commit;
 
     $self->create( $document );
 }
 
-=pod
-
-=head2 B<delete>( $key, $value ) - remove document from the index
-
-    $searcher->delete( 'id', 1 );
-
-finds $key with $value and removes from index
-
-=cut
 sub delete{
     my ( $self, $key, $value ) = @_;
 
@@ -285,15 +197,6 @@ sub delete{
     $self->_indexer->delete_docs_by_term($term);
 }
 
-=pod
-
-=head2 B<commit>() - commits and optimises index after adding documents
-
-    $searcher->commit();
-
-you must call this after you have finished adding items to the index
-
-=cut
 sub commit{
     my ( $self ) = @_;
 
@@ -304,6 +207,88 @@ sub commit{
     $self->_clear_indexer;
     $self->_clear_searcher;
 }
+
+__PACKAGE__->meta->make_immutable;
+
+=head1 NAME
+
+KinoSearchX::Simple - Simple L<KinoSearch1> Interface
+
+=head1 SYNOPSIS
+
+    use KinoSearchX::Simple;
+
+    my $searcher = KinoSearchX::Simple->new(
+        'index_path' => '/tmp/search_index',
+        'schema' => [
+            {
+                'name' => 'title',
+                'boost' => 3,
+            },{
+                'name' => 'description',
+            },{
+                'name' => 'id',
+                'analysed' => 0, #you don't want the analyser to adjust your id do you?
+            },
+        ],
+        'search_fields' => ['title', 'description'],
+        'search_boolop' => 'AND',
+    );
+
+    $searcher->create({
+        'id' => 1,
+        'title' => 'fibble',
+        'description' => 'wibble',
+    });
+
+    #important - always commit after updating the index!
+    $searcher->commit;
+
+    my ( $results, $pager ) = $searcher->search( 'fibble' );
+
+=head1 DESCRIPTION
+
+Simple interface to L<KinoSearch1>. Use if you want to use L<KinoSearch1> and are lazy :p
+
+=head1 METHODS
+
+=head2 B<search>( $query_string, $page ) - search index
+
+    my ( $results, $pager ) = $searcher->search( $query, $page );
+
+=head2 B<create>( $document ) - add item to index
+
+    $searcher->create({
+        'id' => 1,
+        'title' => 'this is the title',
+        'description' => 'this is the description',
+    });
+
+not that it has to be, but its highly recommended that I<id> is a unique identifier for this document 
+
+or you'll have to pass $pk to update_or_create
+
+=head2 B<update_or_create>( $document, $pk ) - updates or creates document in the index
+
+    $searcher->update_or_create({
+        'id' => 1,
+        'title' => 'this is the updated title',
+        'description' => 'this is the description',
+    }, 'id');
+
+$pk is the unique key to lookup by, defaults to 'id'
+
+=head2 B<delete>( $key, $value ) - remove document from the index
+
+    $searcher->delete( 'id', 1 );
+
+finds $key with $value and removes from index
+
+=head2 B<commit>() - commits and optimises index after adding documents
+
+    $searcher->commit();
+
+you must call this after you have finished doing things to the index
 
 =head1 ADVANCED
 
@@ -347,8 +332,6 @@ could be changed tp KinoSearchX::Simple::Result::Hash for a plain old, hashref o
 
 default is 100
 
-=cut
-
 =head1 SUPPORT
 
 Bugs should always be submitted via the CPAN bug tracker
@@ -361,16 +344,13 @@ n0body E<lt>n0body@thisaintnews.comE<gt>
 
 =head1 SEE ALSO
 
-L<http://thisaintnews.com>, L<KinoSearch1>, L<Data::Page>, L<Moose>
+L<http://thisaintnews.com>, L<Image::Info>
 
-=head1 COPYRIGHT AND LICENSE
+=head1 LICENSE
 
-Copyright (C) 2010 by n0body L<http://thisaintnews.com/>
+Copyright (C) 2011 by n0body L<http://thisaintnews.com/>
 
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself, either Perl version 5.10.1 or,
-at your option, any later version of Perl 5 you may have available.
+This library is free software, you can redistribute it and/or modify
+it under the same terms as Perl itself.
 
 =cut
-
-__PACKAGE__->meta->make_immutable;

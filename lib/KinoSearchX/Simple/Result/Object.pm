@@ -1,22 +1,33 @@
 package KinoSearchX::Simple::Result::Object;
+use strict;
+use warnings;
 
-use Moose;
-use namespace::autoclean;
+sub new{
+    my ( $incovant, $data ) = @_;
 
-sub BUILD{
-    my ( $self, $data ) = @_;
+    my $class = ref( $incovant ) || $incovant;
+    my $self = bless( $data, $class );
 
-    foreach my $key ( keys(%{$data}) ){
-        has $key => (
-            'is' => 'ro',
-            'isa' => 'Any',
-            'lazy' => 1,
-            'default' => $data->{$key},
-        );
+#serious business
+    foreach my $key ( keys( %{$data} ) ){
+        if ( !__PACKAGE__->can( $key ) ){
+            $self->_mk_accessor( $key );
+        }
+    }
+ 
+    return $self;
+}
+
+sub _mk_accessor{
+    my ( $self, $name ) = @_;
+
+    my $class = ref( $self ) || $self;
+    {
+        no strict 'refs';
+        *{$class . '::' . $name} = sub {
+            return shift->{ $name } || undef;
+        };
     }
 }
 
-no Moose;
-
 1;
-#don't make immutable coz then we can't add things in BUILD...
