@@ -1,6 +1,6 @@
 package KinoSearchX::Simple;
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 $VERSION = eval $VERSION;
 
 use 5.008;
@@ -133,8 +133,6 @@ has entries_per_page => (
     'lazy' => 1,
     'default' => 100,
 );
-
-no Moose;
 
 sub search{
     my ( $self, $query_string, $page ) = @_;

@@ -1,3 +1,6 @@
+0.08
+    removed no Moose (removing it disables strict)
+    added use strict; use warnings to KinoSearchX::Simple::Result::Hash
 0.07
     changed version number stlye
     fixed documentation error

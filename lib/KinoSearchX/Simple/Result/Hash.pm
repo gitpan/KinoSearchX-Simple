@@ -1,4 +1,6 @@
 package KinoSearchX::Simple::Result::Hash;
+use strict;
+use warnings;
 
 sub new{
     my ( $self, $data ) = @_;
