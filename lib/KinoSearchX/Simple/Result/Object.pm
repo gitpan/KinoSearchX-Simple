@@ -3,14 +3,14 @@ use strict;
 use warnings;
 
 sub new{
-    my ( $incovant, $data ) = @_;
+    my ( $invocant, $data ) = @_;
 
-    my $class = ref( $incovant ) || $incovant;
+    my $class = ref( $invocant ) || $invocant;
     my $self = bless( $data, $class );
 
 #serious business
     foreach my $key ( keys( %{$data} ) ){
-        if ( !__PACKAGE__->can( $key ) ){
+        if ( !$self->can( $key ) ){
             $self->_mk_accessor( $key );
         }
     }

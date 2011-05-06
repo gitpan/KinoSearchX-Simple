@@ -1,3 +1,6 @@
+0.10
+    changed "KinoSearchX::Simple::Result::Object" to check $self->can rather than __PACKAGE__->can for accessor creation
+    spelling fix, changed $incovant => $invocant 
 0.09
     made "_analyser" attribute lazy
 0.08
