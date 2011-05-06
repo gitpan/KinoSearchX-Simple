@@ -1,6 +1,6 @@
 package KinoSearchX::Simple;
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 $VERSION = eval $VERSION;
 
 use 5.008;
@@ -46,6 +46,7 @@ has _analyser => (
     'is' => 'ro',
     'init_arg' => undef,
     'default' => sub { return KinoSearch1::Analysis::PolyAnalyzer->new( language => shift->_language ) },
+    'lazy' => 1,
 );
 
 has schema => (
