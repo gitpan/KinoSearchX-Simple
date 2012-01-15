@@ -1,6 +1,6 @@
 package KinoSearchX::Simple;
 
-our $VERSION = '0.10';
+our $VERSION = '0.11';
 $VERSION = eval $VERSION;
 
 use 5.008;
@@ -213,6 +213,10 @@ __PACKAGE__->meta->make_immutable;
 
 KinoSearchX::Simple - Simple L<KinoSearch1> Interface
 
+=head1 UNMAINTAINED
+
+B<THIS MODULE HAS BEEN REPLACED, SEE >L<LucyX::Simple>
+
 =head1 SYNOPSIS
 
     use KinoSearchX::Simple;
@@ -343,7 +347,7 @@ n0body E<lt>n0body@thisaintnews.comE<gt>
 
 =head1 SEE ALSO
 
-L<http://thisaintnews.com>, L<Image::Info>
+L<http://thisaintnews.com>, L<LucyX::Simple>
 
 =head1 LICENSE
 
